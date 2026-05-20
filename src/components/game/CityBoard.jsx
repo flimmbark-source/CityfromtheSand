@@ -21,9 +21,9 @@ export default function CityBoard({
   cells,
   validPlacements,
   selectedTile,
-  draggingBuild,
+  selectedBuildCard,
   onPlaceTile,
-  onDropBuildCard,
+  onBuildCardOnCell,
 }) {
   const { minRow, maxRow, minCol, maxCol } = gridBoundingBox(cells);
   const pad = 3;
@@ -32,33 +32,8 @@ export default function CityBoard({
   const displayMinCol = Math.min(minCol - pad, -3);
   const displayMaxCol = Math.max(maxCol + pad, 3);
 
-  const validSet = new Set(
-    validPlacements.map(({ row, col }) => cellKey(row, col))
-  );
-
-  function readDragPayload(event) {
-    const raw = event.dataTransfer.getData('application/city-sand-card');
-    if (!raw) return null;
-    try {
-      return JSON.parse(raw);
-    } catch {
-      return null;
-    }
-  }
-
-  function handleDragOver(event, isDropTarget) {
-    if (!isDropTarget) return;
-    event.preventDefault();
-    event.dataTransfer.dropEffect = 'copyMove';
-  }
-
-  function handleDrop(event, row, col, isDropTarget) {
-    if (!isDropTarget) return;
-    event.preventDefault();
-    const payload = readDragPayload(event) || draggingBuild;
-    if (!payload) return;
-    onDropBuildCard?.(payload.cardUid, payload.source, row, col);
-  }
+  const validSet = new Set(validPlacements.map(({ row, col }) => cellKey(row, col)));
+  const buildMode = Boolean(selectedBuildCard);
 
   const rows = [];
   for (let r = displayMinRow; r <= displayMaxRow; r++) {
@@ -66,14 +41,24 @@ export default function CityBoard({
     for (let c = displayMinCol; c <= displayMaxCol; c++) {
       const key = cellKey(r, c);
       const cell = cells[key];
-      const isValidQueuedPlacement = validSet.has(key) && Boolean(selectedTile);
-      const isDropTarget = validSet.has(key) && Boolean(draggingBuild) && !cell;
-      const isActiveTarget = isValidQueuedPlacement || isDropTarget;
+      const isEmpty = !cell;
+      const canQueuePlace = validSet.has(key) && Boolean(selectedTile) && isEmpty;
+      const canBuildHere = validSet.has(key) && buildMode && isEmpty;
+      const isTarget = canQueuePlace || canBuildHere;
+
+      function handleClick() {
+        if (canBuildHere) {
+          onBuildCardOnCell(selectedBuildCard.cardUid, selectedBuildCard.source, r, c);
+        } else if (canQueuePlace) {
+          onPlaceTile(selectedTile.uid, r, c);
+        }
+      }
 
       cols.push(
-        <div
+        <button
           key={key}
-          className={`grid-cell ${cell ? 'grid-cell--occupied' : ''} ${isActiveTarget ? 'grid-cell--valid' : ''} ${isDropTarget ? 'grid-cell--drop-target' : ''}`}
+          type="button"
+          className={`grid-cell ${cell ? 'grid-cell--occupied' : ''} ${isTarget ? 'grid-cell--build-target' : ''}`}
           style={
             cell
               ? {
@@ -82,17 +67,16 @@ export default function CityBoard({
                 }
               : {}
           }
-          onClick={() => isValidQueuedPlacement && onPlaceTile(selectedTile.uid, r, c)}
-          onDragOver={(event) => handleDragOver(event, isDropTarget)}
-          onDrop={(event) => handleDrop(event, r, c, isDropTarget)}
+          onClick={handleClick}
+          disabled={!isTarget && !cell}
           title={
             cell
               ? `${cell.tileName} (${cell.tileType}) — ${cell.vp} VP — P${cell.ownedBy + 1}`
-              : isDropTarget
-                ? `Drop ${draggingBuild?.name || 'card'} here to build`
-                : isValidQueuedPlacement
-                  ? 'Click to place'
-                  : 'Empty build square'
+              : canBuildHere
+                ? `Build ${selectedBuildCard.name} here`
+                : canQueuePlace
+                  ? `Place ${selectedTile.name} here`
+                  : 'Empty square'
           }
         >
           {cell ? (
@@ -102,27 +86,23 @@ export default function CityBoard({
               <span className="cell-vp">{cell.vp}VP</span>
               <span className={`cell-owner owner-${cell.ownedBy}`}>P{cell.ownedBy + 1}</span>
             </div>
-          ) : isDropTarget ? (
-            <div className="cell-valid-hint">⬇</div>
-          ) : isValidQueuedPlacement ? (
+          ) : canBuildHere ? (
+            <div className="build-target-label">Build</div>
+          ) : canQueuePlace ? (
             <div className="cell-valid-hint">+</div>
           ) : null}
-        </div>
+        </button>
       );
     }
-    rows.push(
-      <div key={r} className="grid-row">
-        {cols}
-      </div>
-    );
+    rows.push(<div key={r} className="grid-row">{cols}</div>);
   }
 
   return (
-    <div className={`city-board ${draggingBuild ? 'city-board--dragging-build' : ''}`}>
+    <div className={`city-board ${buildMode ? 'city-board--build-mode' : ''}`}>
       <div className="city-board-title">
         Shared City Grid
-        {draggingBuild ? (
-          <span className="placement-hint"> — Drop {draggingBuild.name} on any empty square</span>
+        {buildMode ? (
+          <span className="placement-hint"> — Choose where to build {selectedBuildCard.name}</span>
         ) : selectedTile ? (
           <span className="placement-hint"> — Click a highlighted cell to place {selectedTile.name}</span>
         ) : null}
@@ -135,12 +115,8 @@ export default function CityBoard({
             {type}
           </span>
         ))}
-        <span className="legend-item">
-          <span className="legend-swatch" style={{ background: '#f0c040' }} />P1
-        </span>
-        <span className="legend-item">
-          <span className="legend-swatch" style={{ background: '#6aadcc' }} />P2
-        </span>
+        <span className="legend-item"><span className="legend-swatch" style={{ background: '#f0c040' }} />P1</span>
+        <span className="legend-item"><span className="legend-swatch" style={{ background: '#6aadcc' }} />P2</span>
       </div>
     </div>
   );
