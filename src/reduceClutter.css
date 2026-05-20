@@ -44,7 +44,6 @@
   font-size: 1.45rem;
 }
 
-/* Main correction: one board area + one control rail. The left rail was making the screen feel boxed in. */
 .game-layout {
   grid-template-columns: minmax(720px, 1fr) 430px;
   grid-template-areas: "center right";
@@ -99,32 +98,71 @@
 .grid-cell {
   width: clamp(48px, 5.1vw, 70px);
   height: clamp(48px, 5.1vw, 70px);
+  border: 1px solid rgba(94, 72, 35, 0.58);
+  appearance: none;
+  color: inherit;
 }
 
-.city-board--dragging-build .grid-cell:not(.grid-cell--occupied) {
-  border-color: rgba(178, 240, 141, 0.72);
-  box-shadow: inset 0 0 0 1px rgba(178, 240, 141, 0.18);
+.grid-cell:disabled {
+  cursor: default;
 }
 
-.grid-cell--drop-target {
-  background: rgba(47, 104, 54, 0.9) !important;
-  border-color: #b9f58f !important;
-  box-shadow: 0 0 0 2px rgba(178, 240, 141, 0.28), 0 0 22px rgba(178, 240, 141, 0.38) !important;
+.grid-cell:not(.grid-cell--occupied) {
+  opacity: 0.78;
 }
 
-.market-card--draggable,
-.landmark-card.market-card--draggable {
-  cursor: grab;
+.city-board--build-mode .grid-cell:not(.grid-cell--occupied) {
+  opacity: 1;
 }
 
-.market-card--draggable:active,
-.landmark-card.market-card--draggable:active {
-  cursor: grabbing;
+.grid-cell--build-target {
+  background:
+    linear-gradient(145deg, rgba(205, 178, 116, 0.88), rgba(150, 114, 58, 0.88)) !important;
+  border-color: rgba(238, 203, 109, 0.9) !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 237, 178, 0.22);
+  cursor: pointer !important;
+}
+
+.grid-cell--build-target:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 0 2px rgba(238, 203, 109, 0.28), 0 12px 20px rgba(0,0,0,0.22);
+}
+
+.build-target-label,
+.cell-valid-hint {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  min-height: 22px;
+  border-radius: 999px;
+  border: 1px solid rgba(76, 52, 17, 0.32);
+  background: rgba(247, 225, 165, 0.78);
+  color: #3b270d;
+  font-size: 0.62rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  text-shadow: none;
+}
+
+.market-card--selectable,
+.landmark-card.market-card--selectable {
+  cursor: pointer;
+}
+
+.market-card--selected-build,
+.landmark-card.market-card--selected-build {
+  transform: translateY(-2px);
+  border-color: #f4cd64 !important;
+  box-shadow: 0 10px 18px rgba(0,0,0,0.38), 0 0 0 2px rgba(244,205,100,0.36), 0 0 20px rgba(244,205,100,0.24) !important;
+  filter: none !important;
+  opacity: 1 !important;
 }
 
 .drag-hint,
 .drag-build-label {
-  color: #bdf2b9;
+  color: #f4cd64;
   font-size: 0.58rem;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -169,7 +207,6 @@
   height: 92px;
 }
 
-/* Right rail: make cards readable but stop them from consuming the whole screen. */
 .market-row,
 .landmark-row {
   flex-shrink: 0;
