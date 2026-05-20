@@ -39,7 +39,7 @@ export default function CityGamePrototype() {
   );
 
   const [selectedTile, setSelectedTile] = useState(null);
-  const [draggingBuild, setDraggingBuild] = useState(null);
+  const [selectedBuildCard, setSelectedBuildCard] = useState(null);
 
   const isGameOver = selectIsGameOver(state);
   const activePlayer = selectActivePlayer(state);
@@ -52,27 +52,31 @@ export default function CityGamePrototype() {
   function handleBuyFromMarket(uid, source) {
     dispatch(buyCard(uid, source));
     setSelectedTile(null);
+    setSelectedBuildCard(null);
   }
 
   function handleBuyBasic(defId) {
     const resource = defId.replace('_supply', '');
     dispatch(buyCard(defId, `basic_${resource}`));
+    setSelectedBuildCard(null);
   }
 
   function handleBuyLandmark(uid) {
     dispatch(buyCard(uid, 'landmark'));
     setSelectedTile(null);
+    setSelectedBuildCard(null);
   }
 
   function handlePlaceTile(uid, row, col) {
     dispatch(placeTile(uid, row, col));
     setSelectedTile(null);
+    setSelectedBuildCard(null);
   }
 
-  function handleDropBuildCard(cardUid, source, row, col) {
+  function handleBuildCardOnCell(cardUid, source, row, col) {
     dispatch(buildCardOnCell(cardUid, source, row, col));
     setSelectedTile(null);
-    setDraggingBuild(null);
+    setSelectedBuildCard(null);
   }
 
   function handleRefreshMarket(uid) {
@@ -82,7 +86,7 @@ export default function CityGamePrototype() {
   function handleEndTurn() {
     dispatch(endTurn());
     setSelectedTile(null);
-    setDraggingBuild(null);
+    setSelectedBuildCard(null);
   }
 
   function handleUseAbility(uid) {
@@ -91,6 +95,11 @@ export default function CityGamePrototype() {
 
   function handleApplyUpgrade(stat) {
     dispatch(applyUpgrade(stat));
+  }
+
+  function handleSelectBuildCard(card) {
+    setSelectedBuildCard(card);
+    setSelectedTile(null);
   }
 
   const canBuyFn = (card) => !isGameOver && selectCanBuyCard(state, card);
@@ -122,40 +131,6 @@ export default function CityGamePrototype() {
             </div>
             <button className="rail-button" type="button">Draw Tile</button>
           </section>
-
-          <section className="game-panel token-panel">
-            <div className="panel-section-title">City Tokens</div>
-            <div className="token-grid">
-              <span><b>Building</b></span>
-              <span><b>Garden</b></span>
-              <span><b>Civic</b></span>
-              <span><b>Water</b></span>
-            </div>
-            <p className="rail-note">Upgrade tokens and city type markers will live here once the visual asset kit is added.</p>
-          </section>
-
-          {activePlayer.engineZone.length > 0 && (
-            <section className="game-panel engine-actions">
-              <div className="panel-section-title">
-                Engine Abilities
-                <span className="once-per-turn"> once/turn</span>
-              </div>
-              {activePlayer.engineZone.map((card) => {
-                const used = activePlayer.usedEngines[card.uid];
-                return (
-                  <button
-                    key={card.uid}
-                    className={`btn-engine ${used ? 'btn-engine--used' : ''}`}
-                    disabled={used || isGameOver}
-                    onClick={() => handleUseAbility(card.uid)}
-                    title={card.effectText}
-                  >
-                    {card.name} {used ? '(used)' : 'Use'}
-                  </button>
-                );
-              })}
-            </section>
-          )}
         </aside>
 
         <main className="center-area">
@@ -163,9 +138,9 @@ export default function CityGamePrototype() {
             cells={state.cityGrid.cells}
             validPlacements={validPlacements}
             selectedTile={selectedTile}
-            draggingBuild={draggingBuild}
+            selectedBuildCard={selectedBuildCard}
             onPlaceTile={handlePlaceTile}
-            onDropBuildCard={handleDropBuildCard}
+            onBuildCardOnCell={handleBuildCardOnCell}
           />
 
           <TurnGuide
@@ -181,7 +156,10 @@ export default function CityGamePrototype() {
             isActive
             availableResources={availableRes}
             selectedTile={selectedTile}
-            onSelectTile={setSelectedTile}
+            onSelectTile={(tile) => {
+              setSelectedTile(tile);
+              setSelectedBuildCard(null);
+            }}
           />
         </main>
 
@@ -197,22 +175,22 @@ export default function CityGamePrototype() {
             onBuyFromMarket={handleBuyFromMarket}
             onBuyBasic={handleBuyBasic}
             onRefreshMarket={handleRefreshMarket}
-            onDragBuildStart={setDraggingBuild}
-            onDragBuildEnd={() => setDraggingBuild(null)}
+            selectedBuildCard={selectedBuildCard}
+            onSelectBuildCard={handleSelectBuildCard}
           />
           <LandmarkRow
             landmarks={state.market.landmarks}
             canBuy={canBuyFn}
             canAfford={canAffordFn}
             onBuyLandmark={handleBuyLandmark}
-            onDragBuildStart={setDraggingBuild}
-            onDragBuildEnd={() => setDraggingBuild(null)}
+            selectedBuildCard={selectedBuildCard}
+            onSelectBuildCard={handleSelectBuildCard}
           />
           <div className="command-deck game-panel">
             <div className="panel-section-title">Actions</div>
             <div className="command-buttons">
-              <button className="action-button" type="button" title="Drag a buildable market card onto the city">Build</button>
-              <button className={`action-button ${selectedTile || draggingBuild ? 'action-button--active' : ''}`} type="button" title="Buildable cards can be dropped on any empty square">Place Tile</button>
+              <button className="action-button" type="button" title="Select a buildable market card, then click a city square">Build</button>
+              <button className={`action-button ${selectedTile || selectedBuildCard ? 'action-button--active' : ''}`} type="button" title="Choose an empty square on the board">Place Tile</button>
               <button className="action-button" type="button" title="Use refresh buttons on Market cards">Refresh {refreshesLeft}</button>
               <button
                 className="action-button action-button--end"
@@ -223,7 +201,9 @@ export default function CityGamePrototype() {
                 End Turn
               </button>
             </div>
-            {draggingBuild && <p className="command-note">Drop {draggingBuild.name} on any empty city square.</p>}
+            {selectedBuildCard && (
+              <p className="command-note">Selected: {selectedBuildCard.name}. Click any open city square to build.</p>
+            )}
             {activePlayer.tilesToPlace.length > 0 && (
               <p className="command-warning">{activePlayer.tilesToPlace.length} queued tile(s) can still be placed by clicking the board.</p>
             )}
