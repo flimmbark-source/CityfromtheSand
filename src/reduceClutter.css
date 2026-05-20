@@ -45,7 +45,7 @@
 }
 
 .game-layout {
-  grid-template-columns: minmax(720px, 1fr) 430px;
+  grid-template-columns: minmax(680px, 1fr) 560px;
   grid-template-areas: "center right";
   gap: 0.7rem;
   padding: 0.7rem;
@@ -76,7 +76,7 @@
 .landmark-row,
 .command-deck,
 .action-log {
-  padding: 0.55rem;
+  padding: 0.65rem;
 }
 
 .city-board {
@@ -96,8 +96,8 @@
 }
 
 .grid-cell {
-  width: clamp(48px, 5.1vw, 70px);
-  height: clamp(48px, 5.1vw, 70px);
+  width: clamp(46px, 4.8vw, 66px);
+  height: clamp(46px, 4.8vw, 66px);
   border: 1px solid rgba(94, 72, 35, 0.58);
   appearance: none;
   color: inherit;
@@ -163,7 +163,7 @@
 .drag-hint,
 .drag-build-label {
   color: #f4cd64;
-  font-size: 0.58rem;
+  font-size: 0.64rem;
   font-weight: 700;
   letter-spacing: 0.04em;
   text-transform: none;
@@ -194,17 +194,27 @@
 }
 
 .player-hand {
-  min-height: 116px;
-  padding: 0.55rem 0.65rem;
+  min-height: 148px;
+  padding: 0.7rem 0.8rem;
 }
 
 .hand-header {
-  margin-bottom: 0.35rem;
+  margin-bottom: 0.48rem;
 }
 
 .hand-card {
-  width: 70px;
-  height: 92px;
+  width: 96px;
+  height: 124px;
+  font-size: 0.82rem;
+  padding: 0.55rem;
+}
+
+.hand-card-emoji {
+  font-size: 2rem;
+}
+
+.hand-card-type {
+  font-size: 0.7rem;
 }
 
 .market-row,
@@ -222,62 +232,78 @@
 
 .market-cards {
   grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 0.3rem;
+  gap: 0.5rem;
+}
+
+.landmark-cards {
+  gap: 0.55rem;
 }
 
 .market-card,
 .landmark-card {
-  padding: 0.3rem;
-  border-radius: 9px;
+  padding: 0.48rem;
+  border-radius: 11px;
 }
 
 .market-card {
-  min-height: 132px;
+  min-height: 180px;
 }
 
 .landmark-card {
-  min-height: 132px;
+  min-height: 172px;
 }
 
 .mc-name,
 .lm-name {
-  font-size: 0.72rem;
-  min-height: 1.35em;
+  font-size: 0.9rem;
+  min-height: 1.5em;
+  line-height: 1.08;
 }
 
 .mc-cost,
 .lm-cost {
-  margin-bottom: 0.14rem;
+  margin-bottom: 0.22rem;
+  gap: 0.16rem;
 }
 
 .cost-pip {
-  padding: 0.02rem 0.14rem;
-  font-size: 0.65rem;
+  padding: 0.05rem 0.18rem;
+  font-size: 0.78rem;
 }
 
 .mc-meta,
 .lm-meta {
-  padding: 0.1rem 0;
-  margin-bottom: 0.14rem;
+  padding: 0.16rem 0;
+  margin-bottom: 0.2rem;
+}
+
+.mc-tiletype,
+.lm-tiletype {
+  font-size: 0.72rem;
+}
+
+.mc-vp,
+.lm-vp {
+  font-size: 0.86rem;
 }
 
 .mc-effect,
 .lm-effect {
-  font-size: 0.58rem;
-  line-height: 1.12;
-  max-height: 3.35em;
+  font-size: 0.72rem;
+  line-height: 1.18;
+  max-height: 4.85em;
   overflow: hidden;
 }
 
 .mc-actions,
 .landmark-card .btn-buy {
-  margin-top: 0.12rem;
+  margin-top: 0.22rem;
 }
 
 .btn-buy,
 .btn-refresh {
-  padding: 0.12rem 0.28rem;
-  font-size: 0.63rem;
+  padding: 0.18rem 0.38rem;
+  font-size: 0.74rem;
 }
 
 .command-buttons {
@@ -298,22 +324,35 @@
 
 @media (max-width: 1280px) {
   .game-layout {
-    grid-template-columns: minmax(620px, 1fr) 390px;
+    grid-template-columns: minmax(560px, 1fr) 500px;
   }
 
-  .market-card,
+  .market-card {
+    min-height: 160px;
+  }
+
   .landmark-card {
-    min-height: 120px;
+    min-height: 152px;
+  }
+
+  .mc-name,
+  .lm-name {
+    font-size: 0.82rem;
+  }
+
+  .mc-effect,
+  .lm-effect {
+    font-size: 0.66rem;
   }
 }
 
 @media (max-height: 780px) {
   .game-header { height: 72px; }
-  .game-layout { grid-template-columns: minmax(560px, 1fr) 380px; gap: 0.5rem; padding: 0.5rem; }
-  .player-hand { min-height: 98px; }
-  .hand-card { width: 62px; height: 80px; }
+  .game-layout { grid-template-columns: minmax(520px, 1fr) 500px; gap: 0.5rem; padding: 0.5rem; }
+  .player-hand { min-height: 126px; }
+  .hand-card { width: 84px; height: 108px; }
   .turn-guide { min-height: 46px; }
   .action-button { min-height: 46px; }
-  .market-card,
-  .landmark-card { min-height: 112px; }
+  .market-card { min-height: 150px; }
+  .landmark-card { min-height: 144px; }
 }
