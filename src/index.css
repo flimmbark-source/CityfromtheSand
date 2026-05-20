@@ -1,0 +1,556 @@
+/* ── Reset & base ─────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:         #1a1208;
+  --bg2:        #2c1f0e;
+  --bg3:        #3d2b12;
+  --parchment:  #f4e8c1;
+  --parchment2: #e8d8a8;
+  --gold:       #c8a040;
+  --gold-light: #f0c040;
+  --text:       #f4e8c1;
+  --text-dim:   #a89060;
+  --border:     #6a4820;
+  --p1:         #f0c040;
+  --p2:         #6aadcc;
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-size: 13px;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  min-height: 100vh;
+}
+
+button {
+  cursor: pointer;
+  font-family: inherit;
+  font-size: 0.85rem;
+}
+
+/* ── Page wrapper ─────────────────────────────────────────────────────────── */
+.page-wrapper {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ── Game root ────────────────────────────────────────────────────────────── */
+.game-root {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+}
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+.game-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg3);
+  border-bottom: 2px solid var(--gold);
+  padding: 0.4rem 1rem;
+  flex-shrink: 0;
+  gap: 1rem;
+}
+
+.header-section { display: flex; align-items: center; gap: 0.4rem; }
+.header-center { flex: 1; text-align: center; }
+.header-vp-row { gap: 0.8rem; }
+
+.label { color: var(--text-dim); font-size: 0.8rem; text-transform: uppercase; }
+.value { color: var(--gold-light); font-weight: bold; font-size: 1rem; }
+
+.active-player-banner {
+  font-size: 1rem;
+  font-weight: bold;
+  color: var(--gold-light);
+  letter-spacing: 0.04em;
+}
+
+.game-over-banner {
+  font-size: 1rem;
+  font-weight: bold;
+  color: #ff9040;
+}
+
+.vp-chip {
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  font-size: 0.8rem;
+}
+.vp-chip.active { border-color: var(--gold-light); color: var(--gold-light); }
+
+/* ── Main layout ──────────────────────────────────────────────────────────── */
+.game-layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+  gap: 0;
+}
+
+/* ── Left panels (player stats) ──────────────────────────────────────────── */
+.left-panels {
+  width: 160px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 0.4rem;
+  background: var(--bg2);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+}
+
+.player-panel {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 0.4rem;
+  font-size: 0.78rem;
+}
+.player-panel--active {
+  border-color: var(--gold);
+  box-shadow: 0 0 6px var(--gold);
+}
+
+.panel-name { font-weight: bold; font-size: 0.82rem; color: var(--parchment); margin-bottom: 0.1rem; }
+.panel-vp { color: var(--gold-light); font-size: 1rem; font-weight: bold; margin-bottom: 0.3rem; }
+
+.panel-section { margin-top: 0.3rem; }
+.panel-section-title {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0.15rem;
+  padding-bottom: 0.1rem;
+}
+
+.stat-row { display: flex; justify-content: space-between; padding: 0.05rem 0; }
+.stat-name { color: var(--text-dim); }
+.stat-val { font-weight: bold; color: var(--parchment); }
+
+.deck-counts { display: flex; flex-direction: column; gap: 0.05rem; color: var(--text-dim); font-size: 0.73rem; }
+
+.engine-card-mini {
+  padding: 0.15rem 0.25rem;
+  background: var(--bg2);
+  border-radius: 3px;
+  font-size: 0.73rem;
+  margin-top: 0.1rem;
+}
+
+.engine-actions { margin-top: 0.4rem; }
+.btn-engine {
+  display: block;
+  width: 100%;
+  background: var(--bg2);
+  border: 1px solid var(--gold);
+  color: var(--gold-light);
+  border-radius: 3px;
+  padding: 0.2rem 0.3rem;
+  font-size: 0.73rem;
+  margin-top: 0.2rem;
+  text-align: left;
+}
+.btn-engine:hover:not(:disabled) { background: var(--bg3); }
+.btn-engine--used { opacity: 0.5; border-color: var(--border); color: var(--text-dim); }
+
+/* ── Center area ──────────────────────────────────────────────────────────── */
+.center-area {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+/* ── City board ───────────────────────────────────────────────────────────── */
+.city-board {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0.4rem;
+  overflow: auto;
+  background: var(--bg);
+}
+
+.city-board-title {
+  font-size: 0.8rem;
+  color: var(--text-dim);
+  margin-bottom: 0.3rem;
+  flex-shrink: 0;
+}
+
+.placement-hint { color: var(--gold-light); }
+
+.grid-container {
+  display: inline-flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.grid-row { display: flex; gap: 2px; }
+
+.grid-cell {
+  width: 60px;
+  height: 60px;
+  border: 1px solid #333;
+  border-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.65rem;
+  position: relative;
+  flex-shrink: 0;
+  background: #111;
+  transition: background 0.1s;
+}
+
+.grid-cell--occupied {
+  border-width: 2px;
+  cursor: default;
+}
+
+.grid-cell--valid {
+  background: #1a2e1a;
+  border-color: #4a8;
+  cursor: pointer;
+  animation: pulse-valid 1.5s ease-in-out infinite;
+}
+.grid-cell--valid:hover { background: #2a4e2a; }
+
+@keyframes pulse-valid {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(68, 170, 100, 0.4); }
+  50%       { box-shadow: 0 0 0 3px rgba(68, 170, 100, 0); }
+}
+
+.cell-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  width: 100%;
+  padding: 2px;
+  gap: 1px;
+}
+
+.cell-emoji { font-size: 1rem; line-height: 1; }
+.cell-name  { font-size: 0.55rem; color: #eee; line-height: 1; overflow: hidden; max-width: 56px; }
+.cell-vp    { font-size: 0.6rem;  color: var(--gold-light); font-weight: bold; }
+.cell-owner { font-size: 0.55rem; position: absolute; top: 1px; right: 2px; }
+.owner-0 { color: var(--p1); }
+.owner-1 { color: var(--p2); }
+
+.cell-valid-hint { font-size: 1.2rem; color: #4a8; }
+
+.city-board-legend {
+  display: flex;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+  margin-top: 0.3rem;
+  font-size: 0.7rem;
+  color: var(--text-dim);
+}
+.legend-item { display: flex; align-items: center; gap: 0.2rem; }
+.legend-swatch { width: 10px; height: 10px; border-radius: 2px; display: inline-block; border: 1px solid #555; }
+
+/* ── Player hand ──────────────────────────────────────────────────────────── */
+.player-hand {
+  background: var(--bg2);
+  border-top: 2px solid var(--border);
+  padding: 0.4rem;
+  flex-shrink: 0;
+  min-height: 90px;
+}
+.player-hand--active { border-top-color: var(--gold); }
+
+.hand-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 0.3rem;
+}
+.hand-title { font-size: 0.8rem; font-weight: bold; color: var(--parchment); }
+.hand-resources { display: flex; gap: 0.3rem; align-items: center; font-size: 0.75rem; color: var(--text-dim); }
+
+.res-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.15rem;
+  padding: 0.1rem 0.3rem;
+  border-radius: 3px;
+  color: #fff;
+  font-size: 0.72rem;
+  font-weight: bold;
+}
+
+.hand-cards {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.hand-card {
+  width: 52px;
+  height: 68px;
+  border: 2px solid #444;
+  border-radius: 4px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 3px;
+  gap: 2px;
+  font-size: 0.65rem;
+  background: var(--bg3);
+  flex-shrink: 0;
+}
+
+.hand-card--resource { cursor: default; }
+.hand-card-emoji { font-size: 1rem; line-height: 1; }
+.hand-card-name { line-height: 1.1; color: var(--parchment2); }
+.hand-card-vp { color: var(--gold-light); font-weight: bold; }
+.hand-card-type { color: var(--text-dim); font-size: 0.6rem; }
+
+.hand-card--tile {
+  cursor: pointer;
+  border-color: var(--gold);
+}
+.hand-card--tile:hover { background: var(--bg2); }
+.hand-card--selected {
+  border-color: var(--gold-light);
+  background: #3a2a00;
+  box-shadow: 0 0 6px var(--gold-light);
+}
+
+.hand-card--other { border-color: #664; }
+
+.tiles-to-place { margin-top: 0.3rem; }
+.tiles-label { font-size: 0.72rem; color: var(--gold); margin-bottom: 0.2rem; }
+
+/* ── Turn controls ────────────────────────────────────────────────────────── */
+.turn-controls {
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  padding: 0.3rem 0.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-shrink: 0;
+}
+
+.btn-end-turn {
+  background: var(--gold);
+  color: var(--bg);
+  border: none;
+  border-radius: 4px;
+  padding: 0.3rem 0.9rem;
+  font-size: 0.85rem;
+  font-weight: bold;
+  transition: background 0.15s;
+}
+.btn-end-turn:hover:not(:disabled) { background: var(--gold-light); }
+.btn-end-turn:disabled { opacity: 0.5; cursor: default; }
+
+.tiles-reminder { color: #f08040; font-size: 0.78rem; }
+
+/* ── Right panels ─────────────────────────────────────────────────────────── */
+.right-panels {
+  width: 220px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg2);
+  border-left: 1px solid var(--border);
+  overflow-y: auto;
+}
+
+/* ── Market row ───────────────────────────────────────────────────────────── */
+.market-row, .landmark-row {
+  padding: 0.4rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.market-section-title {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0.3rem;
+  padding-bottom: 0.1rem;
+}
+
+.market-cards, .landmark-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.market-card, .landmark-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-top-width: 3px;
+  border-radius: 3px;
+  padding: 0.3rem;
+  font-size: 0.73rem;
+}
+
+.market-card--affordable { border-color: #6a6a40; }
+.market-card--buyable    { border-color: var(--gold); }
+
+.affordable { border-color: #6a6a40 !important; }
+.buyable    { border-color: var(--gold) !important; box-shadow: 0 0 4px rgba(200,160,64,0.4); }
+
+.mc-name, .lm-name {
+  font-weight: bold;
+  color: var(--parchment);
+  margin-bottom: 0.15rem;
+}
+
+.mc-cost, .lm-cost, .basic-card-cost {
+  display: flex;
+  gap: 0.15rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.15rem;
+}
+
+.cost-pip {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 0.05rem 0.2rem;
+  font-size: 0.72rem;
+}
+
+.mc-meta, .lm-meta {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.1rem;
+}
+
+.mc-tiletype, .lm-tiletype { font-size: 0.68rem; text-transform: capitalize; color: var(--text-dim); }
+.mc-vp, .lm-vp { font-size: 0.75rem; color: var(--gold-light); font-weight: bold; }
+.mc-effect, .lm-effect { color: var(--text-dim); font-size: 0.68rem; margin-bottom: 0.2rem; line-height: 1.3; }
+.mc-engine-badge { background: #442; border: 1px solid #884; border-radius: 3px; padding: 0.05rem 0.2rem; font-size: 0.65rem; }
+
+.mc-actions { display: flex; gap: 0.3rem; }
+
+.btn-buy {
+  background: var(--bg2);
+  border: 1px solid var(--gold);
+  color: var(--gold-light);
+  border-radius: 3px;
+  padding: 0.15rem 0.4rem;
+  font-size: 0.72rem;
+  transition: background 0.1s;
+}
+.btn-buy:hover:not(:disabled) { background: var(--bg3); }
+.btn-buy:disabled { opacity: 0.4; cursor: default; border-color: var(--border); color: var(--text-dim); }
+
+.btn-refresh {
+  background: var(--bg2);
+  border: 1px solid #48a;
+  color: #8cf;
+  border-radius: 3px;
+  padding: 0.15rem 0.3rem;
+  font-size: 0.72rem;
+}
+.btn-refresh:hover { background: var(--bg3); }
+
+.market-deck-count { font-size: 0.7rem; color: var(--text-dim); margin-top: 0.2rem; }
+.market-empty { color: var(--text-dim); font-size: 0.72rem; padding: 0.3rem; }
+
+/* ── Basic pool ───────────────────────────────────────────────────────────── */
+.basic-pool {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.basic-card {
+  background: var(--bg3);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 0.25rem 0.3rem;
+  font-size: 0.7rem;
+  cursor: default;
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.basic-card.buyable { cursor: pointer; border-color: var(--gold); }
+.basic-card.buyable:hover { background: var(--bg2); }
+
+.basic-card-name { flex: 1; font-weight: bold; color: var(--parchment2); }
+.basic-card-effect { color: var(--text-dim); font-size: 0.65rem; }
+.basic-card-count { color: var(--text-dim); font-size: 0.68rem; min-width: 24px; text-align: right; }
+
+/* ── Action log ───────────────────────────────────────────────────────────── */
+.action-log {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 0.4rem;
+  min-height: 120px;
+}
+
+.action-log-title {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0.3rem;
+  padding-bottom: 0.1rem;
+}
+
+.action-log-entries {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.log-entry {
+  font-size: 0.7rem;
+  color: var(--parchment2);
+  padding: 0.1rem 0;
+  border-bottom: 1px solid #2a1e08;
+  line-height: 1.3;
+}
+
+/* ── Game over overlay ────────────────────────────────────────────────────── */
+.game-over-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+}
+
+.game-over-box {
+  background: var(--bg3);
+  border: 2px solid var(--gold);
+  border-radius: 8px;
+  padding: 2rem;
+  text-align: center;
+  min-width: 260px;
+}
+
+.game-over-box h2 { color: var(--gold-light); margin-bottom: 0.5rem; }
+.game-over-box p  { color: var(--parchment); margin-bottom: 1rem; font-size: 1rem; }
+
+.score-table { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+.score-table td { padding: 0.3rem 0.5rem; border: 1px solid var(--border); color: var(--parchment); }
