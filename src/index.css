@@ -529,6 +529,147 @@ button {
   line-height: 1.3;
 }
 
+/* ── Turn Guide (§4 steps) ────────────────────────────────────────────────── */
+.turn-guide {
+  display: flex;
+  align-items: stretch;
+  gap: 2px;
+  background: var(--bg2);
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+  overflow-x: auto;
+}
+
+.tg-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.25rem 0.4rem;
+  flex: 1;
+  min-width: 72px;
+  border-right: 1px solid var(--border);
+  font-size: 0.68rem;
+  position: relative;
+}
+.tg-step:last-child { border-right: none; }
+
+.tg-num   { font-size: 1rem; line-height: 1; }
+.tg-label { font-weight: bold; color: var(--parchment); font-size: 0.65rem; text-align: center; margin-top: 0.1rem; }
+.tg-detail{ color: var(--text-dim); font-size: 0.62rem; text-align: center; }
+.tg-note  { color: #f08040; font-size: 0.6rem; text-align: center; font-weight: bold; }
+
+.tg-step--done      { background: #111; opacity: 0.6; }
+.tg-step--available { background: #1a2e1a; border-color: #4a8; }
+.tg-step--available .tg-label { color: #8d8; }
+.tg-step--pending   { background: #2a1a00; border-color: #f08040; }
+.tg-step--pending .tg-label { color: #f08040; }
+.tg-step--na        { background: #111; opacity: 0.4; }
+
+/* ── Market action counters (§4 steps 2 & 3) ─────────────────────────────── */
+.market-action-counters {
+  display: flex;
+  gap: 0.3rem;
+  margin-bottom: 0.4rem;
+}
+
+.action-counter {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.3rem 0.2rem;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  font-size: 0.68rem;
+  text-align: center;
+}
+.action-counter--available {
+  background: #1a2e1a;
+  border-color: #4a8;
+}
+.action-counter--spent {
+  background: #111;
+  opacity: 0.55;
+}
+.counter-icon  { font-size: 1rem; line-height: 1; }
+.counter-label { font-size: 0.62rem; color: var(--text-dim); margin-top: 0.1rem; }
+.counter-val   { font-size: 0.82rem; font-weight: bold; color: var(--parchment); }
+.counter-note  { font-size: 0.58rem; color: #f08040; font-weight: bold; margin-top: 0.1rem; }
+
+.basic-note { font-size: 0.62rem; color: var(--text-dim); font-weight: normal; }
+
+/* ── Upgrade tokens (§7) ─────────────────────────────────────────────────── */
+.upgrade-token-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.15rem 0;
+}
+.upgrade-token-count {
+  font-size: 0.9rem;
+  font-weight: bold;
+  color: var(--gold-light);
+}
+.upgrade-hint {
+  font-size: 0.62rem;
+  color: var(--gold);
+  font-style: italic;
+}
+
+.btn-upgrade-stat {
+  background: var(--gold);
+  color: var(--bg);
+  border: none;
+  border-radius: 3px;
+  padding: 0.05rem 0.2rem;
+  font-size: 0.65rem;
+  cursor: pointer;
+  margin-left: 0.2rem;
+}
+.btn-upgrade-stat:hover { background: var(--gold-light); }
+
+.stat-val--cap { color: #888; }
+.stat-cap { font-size: 0.6rem; color: var(--text-dim); }
+
+/* ── Token persistence indicators ────────────────────────────────────────── */
+.persist-label {
+  font-size: 0.6rem;
+  color: #8ac8a0;
+  font-weight: normal;
+}
+.res-label { display: flex; align-items: center; gap: 0.2rem; }
+.res-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+.token-footnote {
+  font-size: 0.6rem;
+  color: var(--text-dim);
+  font-style: italic;
+  margin-top: 0.15rem;
+}
+
+/* ── Engine zone clarifications ──────────────────────────────────────────── */
+.once-per-turn { font-size: 0.62rem; color: var(--text-dim); font-weight: normal; }
+
+/* ── GameHeader VP chips ─────────────────────────────────────────────────── */
+.vp-chip { display: flex; align-items: center; gap: 0.3rem; }
+.vp-chip-name  { font-size: 0.75rem; color: var(--text-dim); }
+.vp-chip-score { font-weight: bold; }
+.vp-chip-upgrade { font-size: 0.7rem; color: var(--gold-light); }
+
+.landmark-counter { display: flex; align-items: center; gap: 0.3rem; }
+
+/* ── Turn controls additions ─────────────────────────────────────────────── */
+.convert-note {
+  font-size: 0.7rem;
+  color: #8ac8a0;
+}
+
 /* ── Game over overlay ────────────────────────────────────────────────────── */
 .game-over-overlay {
   position: fixed;

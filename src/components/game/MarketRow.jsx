@@ -2,60 +2,78 @@ import React from 'react';
 import { CARD_TYPES } from '../../game/constants.js';
 
 const COST_EMOJI = {
-  stone: '🪨',
-  water: '💧',
-  sand: '🟡',
+  stone:    '🪨',
+  water:    '💧',
+  sand:     '🟡',
   greenery: '🌿',
-  any: '◇',
+  any:      '◇',
 };
 
 const TYPE_COLOR = {
   building: '#c8a96e',
-  road: '#b5a07a',
-  garden: '#6aad6a',
-  water: '#5a9ec8',
+  road:     '#b5a07a',
+  garden:   '#6aad6a',
+  water:    '#5a9ec8',
 };
 
 export default function MarketRow({
   market,
   canBuy,
   canAfford,
-  canRefresh,
+  buildsRemaining,
+  buildTotal,
+  refreshesRemaining,
+  refreshTotal,
   onBuyFromMarket,
   onBuyBasic,
   onRefreshMarket,
 }) {
+  const canRefresh = refreshesRemaining > 0;
+
   return (
     <div className="market-row">
-      <div className="market-section-title">Market Row</div>
+      {/* §4 step 3 — Build counter */}
+      <div className="market-action-counters">
+        <div className={`action-counter ${buildsRemaining > 0 ? 'counter--available' : 'counter--spent'}`}>
+          <span className="counter-icon">🔨</span>
+          <span className="counter-label">Buy/Build</span>
+          <span className="counter-val">{buildsRemaining}/{buildTotal}</span>
+        </div>
+        {/* §4 step 2 — Free Refresh counter (shown even when 0) */}
+        {refreshTotal > 0 && (
+          <div className={`action-counter ${canRefresh ? 'counter--available' : 'counter--spent'}`}>
+            <span className="counter-icon">↺</span>
+            <span className="counter-label">Free Refresh</span>
+            <span className="counter-val">{refreshesRemaining}/{refreshTotal}</span>
+            {canRefresh && <span className="counter-note">step ② — before buying</span>}
+          </div>
+        )}
+      </div>
+
+      <div className="market-section-title">Main Market (5 cards)</div>
 
       <div className="market-cards">
-        {market.row.map((card) => {
-          const affordable = canAfford(card);
-          const buyable = canBuy(card);
-
-          return (
-            <MarketCard
-              key={card.uid}
-              card={card}
-              affordable={affordable}
-              buyable={buyable}
-              canRefresh={canRefresh}
-              onBuy={() => onBuyFromMarket(card.uid, 'market')}
-              onRefresh={() => onRefreshMarket(card.uid)}
-            />
-          );
-        })}
+        {market.row.map((card) => (
+          <MarketCard
+            key={card.uid}
+            card={card}
+            affordable={canAfford(card)}
+            buyable={canBuy(card)}
+            canRefresh={canRefresh}
+            onBuy={() => onBuyFromMarket(card.uid, 'market')}
+            onRefresh={() => onRefreshMarket(card.uid)}
+          />
+        ))}
         {market.row.length === 0 && (
           <div className="market-empty">Market deck empty.</div>
         )}
       </div>
 
-      <div className="market-deck-count">Deck: {market.deck.length} cards</div>
+      <div className="market-deck-count">Deck: {market.deck.length} remaining</div>
 
-      {/* Basic Pool */}
+      {/* §8 Basic Pool — fallback cards, do not build tiles */}
       <div className="market-section-title" style={{ marginTop: '0.5rem' }}>
-        Basic Pool
+        Basic Cards <span className="basic-note">(fallback — no tile)</span>
       </div>
       <div className="basic-pool">
         {Object.entries(market.basicPool).map(([id, { count, def }]) => {
@@ -66,7 +84,7 @@ export default function MarketRow({
               key={id}
               className={`basic-card ${affordable ? 'affordable' : ''} ${buyable ? 'buyable' : ''}`}
               onClick={() => buyable && onBuyBasic(def.id, id)}
-              title={def.effectText}
+              title={`${def.effectText} — goes to your discard, no tile placed`}
             >
               <div className="basic-card-name">{def.name}</div>
               <div className="basic-card-cost">
@@ -87,11 +105,12 @@ export default function MarketRow({
 function MarketCard({ card, affordable, buyable, canRefresh, onBuy, onRefresh }) {
   const isTile = card.cardType === CARD_TYPES.TILE || card.cardType === CARD_TYPES.LANDMARK;
   const isEngine = card.cardType === CARD_TYPES.ENGINE;
+  const tileColor = TYPE_COLOR[card.tileType] || '#888';
 
   return (
     <div
       className={`market-card ${affordable ? 'market-card--affordable' : ''} ${buyable ? 'market-card--buyable' : ''}`}
-      style={{ borderTopColor: isTile ? (TYPE_COLOR[card.tileType] || '#888') : '#888' }}
+      style={{ borderTopColor: isTile ? tileColor : '#888' }}
     >
       <div className="mc-name">{card.name}</div>
 
@@ -103,14 +122,22 @@ function MarketCard({ card, affordable, buyable, canRefresh, onBuy, onRefresh })
 
       {isTile && (
         <div className="mc-meta">
-          <span className="mc-tiletype" style={{ color: TYPE_COLOR[card.tileType] }}>
-            {card.tileType}
+          {/* §9 Build icon = tile type */}
+          <span
+            className="mc-tiletype"
+            style={{ background: tileColor + '33', borderColor: tileColor, color: tileColor }}
+          >
+            {tileTypeIcon(card.tileType)} {card.tileType}
           </span>
           <span className="mc-vp">{card.vp} VP</span>
         </div>
       )}
 
-      {isEngine && <div className="mc-meta"><span className="mc-engine-badge">Engine</span></div>}
+      {isEngine && (
+        <div className="mc-meta">
+          <span className="mc-engine-badge">⚙ Engine (0 VP)</span>
+        </div>
+      )}
 
       <div className="mc-effect">{card.effectText}</div>
 
@@ -119,16 +146,31 @@ function MarketCard({ card, affordable, buyable, canRefresh, onBuy, onRefresh })
           className="btn-buy"
           disabled={!buyable}
           onClick={onBuy}
-          title={buyable ? 'Buy this card' : 'Cannot buy'}
+          title={
+            buyable
+              ? `Buy ${card.name}`
+              : affordable
+                ? 'No build actions remaining'
+                : 'Cannot afford'
+          }
         >
-          Buy
+          {isTile ? 'Build' : 'Buy'}
         </button>
         {canRefresh && (
-          <button className="btn-refresh" onClick={onRefresh} title="Refresh this card">
+          <button
+            className="btn-refresh"
+            onClick={onRefresh}
+            title="Free Refresh: send to bottom of deck, reveal replacement (§4 step 2)"
+          >
             ↺
           </button>
         )}
       </div>
     </div>
   );
+}
+
+function tileTypeIcon(tileType) {
+  const icons = { building: '🏛', road: '🛣', garden: '🌸', water: '💧' };
+  return icons[tileType] || '';
 }

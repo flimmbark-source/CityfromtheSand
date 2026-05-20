@@ -30,13 +30,23 @@ export default function GameHeader({ state }) {
 
       <div className="header-section header-vp-row">
         {state.players.map((p) => (
-          <span key={p.id} className={`vp-chip ${state.activePlayer === p.id && !isOver ? 'active' : ''}`}>
-            {p.name}: <strong>{p.vp} VP</strong>
-          </span>
+          <div
+            key={p.id}
+            className={`vp-chip ${state.activePlayer === p.id && !isOver ? 'active' : ''}`}
+          >
+            <span className="vp-chip-name">{p.name}</span>
+            <span className="vp-chip-score">{p.vp} VP</span>
+            {p.upgradeTokens > 0 && (
+              <span className="vp-chip-upgrade" title="Upgrade tokens available">
+                ⬆{p.upgradeTokens}
+              </span>
+            )}
+          </div>
         ))}
-        <span className="label">
-          Landmarks: <strong>{state.builtLandmarks}</strong> / 3
-        </span>
+        <div className="landmark-counter">
+          <span className="label">Landmarks</span>
+          <span className="value">{state.builtLandmarks}/3</span>
+        </div>
       </div>
     </header>
   );

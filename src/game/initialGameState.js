@@ -79,8 +79,9 @@ function makePlayer(id, characterId, seed) {
     vp: 0,
     buildActionsUsed: 0,
     refreshActionsUsed: 0,
-    usedEngines: {},      // uid -> true
-    costReduction: null,  // { resource, amount } — cleared after one buy
+    usedEngines: {},       // uid -> true
+    costReduction: null,   // { resource, amount } — cleared after one buy
+    upgradeTokens: 0,      // §7: upgrade tokens available to spend on stats
   };
 }
 

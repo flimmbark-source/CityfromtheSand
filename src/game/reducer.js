@@ -6,11 +6,12 @@ import {
   PLACE_TILE,
   USE_ABILITY,
   END_TURN,
+  APPLY_UPGRADE,
 } from './actions.js';
-import { CARD_TYPES, PHASES, LANDMARKS_TO_WIN, MARKET_ROW_SIZE } from './constants.js';
+import { CARD_TYPES, PHASES, LANDMARKS_TO_WIN, MARKET_ROW_SIZE, STAT_CAPS } from './constants.js';
 import { createInitialGameState, shuffle } from './initialGameState.js';
 import { makeCardInstance } from './cards.js';
-import { canAffordCard, canBuyCard, computeAvailableResources } from './validation.js';
+import { canAffordCard, canBuyCard, computeAvailableResources, canApplyUpgrade } from './validation.js';
 import { canPlaceTileAt } from './cityGrid.js';
 import { resolvePlacementEffects } from './scoring.js';
 import { cellKey } from './cityGrid.js';
@@ -43,6 +44,9 @@ export function gameReducer(state, action) {
 
     case END_TURN:
       return handleEndTurn(state);
+
+    case APPLY_UPGRADE:
+      return handleApplyUpgrade(state, action.payload);
 
     default:
       return state;
@@ -331,6 +335,8 @@ function handlePlaceTile(state, { cardUid, row, col }) {
     discard: [...player.discard, card],
     vp: player.vp + card.vp,
     tokens: addTokens(player.tokens, fx.tokens),
+    // §7: upgrade tokens gained from placement effects
+    upgradeTokens: player.upgradeTokens + (fx.upgradeTokens || 0),
   };
 
   // ADD_RESOURCE: add resource cards to discard
@@ -535,6 +541,25 @@ function handleEndTurn(state) {
   }
 
   return next;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Apply upgrade token to a character stat (§7)
+// ─────────────────────────────────────────────────────────────────────────────
+function handleApplyUpgrade(state, { stat }) {
+  const pid = state.activePlayer;
+  const player = state.players[pid];
+
+  if (!canApplyUpgrade(player, stat)) {
+    return addLog(state, `Cannot upgrade ${stat} (no tokens or at cap).`);
+  }
+
+  const newStats = { ...player.stats, [stat]: player.stats[stat] + 1 };
+  let next = updatePlayer(state, pid, {
+    stats: newStats,
+    upgradeTokens: player.upgradeTokens - 1,
+  });
+  return addLog(next, `${player.name} upgrades ${stat} to ${newStats[stat]}.`);
 }
 
 // ─────────────────────────────────────────────────────────────────────────────

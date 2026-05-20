@@ -34,10 +34,19 @@ export const selectCanFreeRefresh = (state) => {
   return player.refreshActionsUsed < player.stats.refresh;
 };
 
-// How many build actions remain for the active player this turn.
 export const selectBuildsRemaining = (state) => {
   const player = selectActivePlayer(state);
-  return player.stats.build - player.buildActionsUsed;
+  return Math.max(0, player.stats.build - player.buildActionsUsed);
+};
+
+export const selectRefreshesRemaining = (state) => {
+  const player = selectActivePlayer(state);
+  return Math.max(0, player.stats.refresh - player.refreshActionsUsed);
+};
+
+export const selectAvailableEngineCount = (state) => {
+  const player = selectActivePlayer(state);
+  return player.engineZone.filter((c) => !player.usedEngines[c.uid]).length;
 };
 
 export const selectEngineCards = (state, playerId) =>

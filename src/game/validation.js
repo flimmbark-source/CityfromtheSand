@@ -1,4 +1,4 @@
-import { CARD_TYPES } from './constants.js';
+import { CARD_TYPES, STAT_CAPS } from './constants.js';
 import { canPlaceTileAt } from './cityGrid.js';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -6,66 +6,52 @@ import { canPlaceTileAt } from './cityGrid.js';
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Sum available resources: hand resource cards + tokens.
+// Basic cards in hand are NOT counted here — they are tracked separately as
+// any-payers in canAffordCard below.
 export function computeAvailableResources(player) {
   const avail = { stone: 0, water: 0, sand: 0, greenery: 0 };
-
   for (const card of player.hand) {
     if (card.cardType === CARD_TYPES.RESOURCE) {
       avail[card.resourceType] = (avail[card.resourceType] || 0) + 1;
     }
-    // Basic cards in hand count as 'any' when spent — tracked separately
   }
-
-  // Add tokens
   for (const res of Object.keys(player.tokens)) {
     avail[res] = (avail[res] || 0) + player.tokens[res];
   }
-
   return avail;
 }
 
-// Count 'any'-capable cards in hand (resource cards + basic cards).
-export function countAnyCards(player) {
-  return player.hand.filter(
-    (c) => c.cardType === CARD_TYPES.RESOURCE || c.cardType === CARD_TYPES.BASIC
-  ).length;
-}
-
 // ─────────────────────────────────────────────────────────────────────────────
-// canAffordCard — checks whether a player can pay a given cost array.
-// Cost is an array of resource strings, e.g. ['stone', 'any', 'any'].
+// canAffordCard
+// Basic cards in hand count as "any" payers (§4: spent resource cards / tokens).
 // ─────────────────────────────────────────────────────────────────────────────
 export function canAffordCard(player, cost) {
   if (!cost || cost.length === 0) return true;
 
-  // Apply any cost reductions stored on the player
   const effectiveCost = applyCostReductions(player, cost);
-
   const avail = { ...computeAvailableResources(player) };
-  // Track how many 'any' payers are available (resource + basic cards + any token)
-  const totalAny = Object.values(avail).reduce((a, b) => a + b, 0);
+  // Basic cards in hand can satisfy 'any' requirements
+  const basicInHand = player.hand.filter((c) => c.cardType === CARD_TYPES.BASIC).length;
 
   let anyRequired = 0;
-
   for (const c of effectiveCost) {
     if (c === 'any') {
       anyRequired++;
     } else {
-      if (avail[c] > 0) {
+      if ((avail[c] || 0) > 0) {
         avail[c]--;
       } else {
-        return false; // can't pay specific requirement
+        return false;
       }
     }
   }
 
-  // Check remaining 'any' requirements against leftover resources
+  // Remaining specific resources + basic cards can all satisfy 'any' costs
   const leftover = Object.values(avail).reduce((a, b) => a + b, 0);
-  return leftover >= anyRequired;
+  return leftover + basicInHand >= anyRequired;
 }
 
 function applyCostReductions(player, cost) {
-  // If the player has a pending cost reduction effect, apply it.
   if (!player.costReduction) return cost;
   const { resource, amount } = player.costReduction;
   const result = [...cost];
@@ -80,7 +66,7 @@ function applyCostReductions(player, cost) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// canBuyCard — can afford AND hasn't exceeded build limit
+// canBuyCard — can afford AND has build actions remaining
 // ─────────────────────────────────────────────────────────────────────────────
 export function canBuyCard(player, card) {
   if (player.buildActionsUsed >= player.stats.build) return false;
@@ -88,7 +74,7 @@ export function canBuyCard(player, card) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// canPlaceTile — card must be in tilesToPlace, cell must be valid
+// canPlaceTile
 // ─────────────────────────────────────────────────────────────────────────────
 export function canPlaceTile(player, cells, cardUid, row, col) {
   const inQueue = player.tilesToPlace.some((c) => c.uid === cardUid);
@@ -97,8 +83,17 @@ export function canPlaceTile(player, cells, cardUid, row, col) {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// isActivePlayer — simple index check
+// isActivePlayer
 // ─────────────────────────────────────────────────────────────────────────────
 export function isActivePlayer(state, playerId) {
   return state.activePlayer === playerId && state.phase !== 'game_over';
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// canApplyUpgrade — must have an upgrade token and stat below its cap
+// ─────────────────────────────────────────────────────────────────────────────
+export function canApplyUpgrade(player, stat) {
+  if (player.upgradeTokens < 1) return false;
+  const cap = STAT_CAPS[stat];
+  return cap !== undefined && player.stats[stat] < cap;
 }
