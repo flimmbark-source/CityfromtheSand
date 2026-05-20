@@ -91,23 +91,44 @@ export default function CityGamePrototype() {
     <div className="game-root">
       <GameHeader state={state} />
 
-      <div className="game-layout">
-        {/* ── Left: player panels ─────────────────────────────────────────── */}
-        <div className="left-panels">
-          {state.players.map((p) => (
-            <PlayerPanel
-              key={p.id}
-              player={p}
-              isActive={state.activePlayer === p.id}
-              onApplyUpgrade={handleApplyUpgrade}
-            />
-          ))}
+      <div className="player-huds">
+        {state.players.map((p) => (
+          <PlayerPanel
+            key={p.id}
+            player={p}
+            isActive={state.activePlayer === p.id}
+            onApplyUpgrade={handleApplyUpgrade}
+          />
+        ))}
+      </div>
 
-          {/* Engine abilities for active player */}
+      <div className="game-layout">
+        <aside className="left-utility-rail">
+          <section className="game-panel tile-stack-panel">
+            <div className="panel-section-title">Tile Stack</div>
+            <div className="tile-stack-card">
+              <span className="tile-stack-emblem">🌴</span>
+              <strong>28</strong>
+              <small>city tiles</small>
+            </div>
+            <button className="rail-button" type="button">Draw Tile</button>
+          </section>
+
+          <section className="game-panel token-panel">
+            <div className="panel-section-title">City Tokens</div>
+            <div className="token-grid">
+              <span><b>🏠</b> Building</span>
+              <span><b>🌿</b> Garden</span>
+              <span><b>🏛</b> Civic</span>
+              <span><b>💧</b> Water</span>
+            </div>
+            <p className="rail-note">Upgrade tokens and city type markers will live here once the visual asset kit is added.</p>
+          </section>
+
           {activePlayer.engineZone.length > 0 && (
-            <div className="engine-actions">
+            <section className="game-panel engine-actions">
               <div className="panel-section-title">
-                ⑤ Engine Abilities
+                Engine Abilities
                 <span className="once-per-turn"> once/turn</span>
               </div>
               {activePlayer.engineZone.map((card) => {
@@ -120,16 +141,15 @@ export default function CityGamePrototype() {
                     onClick={() => handleUseAbility(card.uid)}
                     title={card.effectText}
                   >
-                    ⚙ {card.name} {used ? '(used this turn)' : '→ Use'}
+                    ⚙ {card.name} {used ? '(used)' : '→ Use'}
                   </button>
                 );
               })}
-            </div>
+            </section>
           )}
-        </div>
+        </aside>
 
-        {/* ── Center: city board + turn guide + hand ───────────────────────── */}
-        <div className="center-area">
+        <main className="center-area">
           <CityBoard
             cells={state.cityGrid.cells}
             validPlacements={validPlacements}
@@ -137,7 +157,6 @@ export default function CityGamePrototype() {
             onPlaceTile={handlePlaceTile}
           />
 
-          {/* §4 Turn step indicator */}
           <TurnGuide
             player={activePlayer}
             buildsRemaining={buildsRemaining}
@@ -153,31 +172,9 @@ export default function CityGamePrototype() {
             selectedTile={selectedTile}
             onSelectTile={setSelectedTile}
           />
+        </main>
 
-          <div className="turn-controls">
-            <button
-              className="btn-end-turn"
-              onClick={handleEndTurn}
-              disabled={isGameOver}
-              title="§4 step 6: Convert leftovers → tokens, discard hand, refill market"
-            >
-              ⑥ End Turn →
-            </button>
-            {activePlayer.tilesToPlace.length > 0 && (
-              <span className="tiles-reminder">
-                ⚠ {activePlayer.tilesToPlace.length} unplaced tile(s) will be discarded!
-              </span>
-            )}
-            {activePlayer.stats.convert > 0 && (
-              <span className="convert-note">
-                End turn auto-converts up to {activePlayer.stats.convert} card(s) to tokens.
-              </span>
-            )}
-          </div>
-        </div>
-
-        {/* ── Right: market, landmarks, log ───────────────────────────────── */}
-        <div className="right-panels">
+        <aside className="right-panels">
           <MarketRow
             market={state.market}
             canBuy={canBuyFn}
@@ -196,8 +193,30 @@ export default function CityGamePrototype() {
             canAfford={canAffordFn}
             onBuyLandmark={handleBuyLandmark}
           />
+          <div className="command-deck game-panel">
+            <div className="panel-section-title">Actions</div>
+            <div className="command-buttons">
+              <button className="action-button" type="button" title="Buy or build from the Market">🔨<span>Build</span></button>
+              <button className={`action-button ${selectedTile ? 'action-button--active' : ''}`} type="button" title="Select a built tile, then place it on the city">◇<span>Place Tile</span></button>
+              <button className="action-button" type="button" title="Use the refresh buttons on Market cards">↺<span>Refresh {refreshesLeft}</span></button>
+              <button
+                className="action-button action-button--end"
+                onClick={handleEndTurn}
+                disabled={isGameOver}
+                title="Convert leftovers, discard hand, refill market, then pass to opponent"
+              >
+                ➜<span>End Turn</span>
+              </button>
+            </div>
+            {activePlayer.tilesToPlace.length > 0 && (
+              <p className="command-warning">⚠ {activePlayer.tilesToPlace.length} unplaced tile(s) will be discarded.</p>
+            )}
+            {activePlayer.stats.convert > 0 && (
+              <p className="command-note">End turn auto-converts up to {activePlayer.stats.convert} card(s) to tokens.</p>
+            )}
+          </div>
           <ActionLog log={state.log} />
-        </div>
+        </aside>
       </div>
 
       {isGameOver && (
