@@ -27,8 +27,8 @@ export default function MarketRow({
   onBuyFromMarket,
   onBuyBasic,
   onRefreshMarket,
-  onDragBuildStart,
-  onDragBuildEnd,
+  selectedBuildCard,
+  onSelectBuildCard,
 }) {
   const canRefresh = refreshesRemaining > 0;
 
@@ -45,12 +45,11 @@ export default function MarketRow({
             <span className="counter-icon">↺</span>
             <span className="counter-label">Free Refresh</span>
             <span className="counter-val">{refreshesRemaining}/{refreshTotal}</span>
-            {canRefresh && <span className="counter-note">step ② — before buying</span>}
           </div>
         )}
       </div>
 
-      <div className="market-section-title">Main Market <span className="drag-hint">drag buildable cards onto the city</span></div>
+      <div className="market-section-title">Main Market <span className="drag-hint">select a card, then choose a map square</span></div>
 
       <div className="market-cards">
         {market.row.map((card) => (
@@ -60,11 +59,11 @@ export default function MarketRow({
             source="market"
             affordable={canAfford(card)}
             buyable={canBuy(card)}
+            selected={selectedBuildCard?.cardUid === card.uid && selectedBuildCard?.source === 'market'}
             canRefresh={canRefresh}
             onBuy={() => onBuyFromMarket(card.uid, 'market')}
             onRefresh={() => onRefreshMarket(card.uid)}
-            onDragBuildStart={onDragBuildStart}
-            onDragBuildEnd={onDragBuildEnd}
+            onSelectBuildCard={onSelectBuildCard}
           />
         ))}
         {market.row.length === 0 && (
@@ -104,36 +103,23 @@ export default function MarketRow({
   );
 }
 
-function MarketCard({ card, source, affordable, buyable, canRefresh, onBuy, onRefresh, onDragBuildStart, onDragBuildEnd }) {
+function MarketCard({ card, source, affordable, buyable, selected, canRefresh, onBuy, onRefresh, onSelectBuildCard }) {
   const isTile = card.cardType === CARD_TYPES.TILE || card.cardType === CARD_TYPES.LANDMARK;
   const isEngine = card.cardType === CARD_TYPES.ENGINE;
   const tileColor = TYPE_COLOR[card.tileType] || '#888';
-  const canDragBuild = isTile && buyable;
+  const canDirectBuild = isTile && buyable;
 
-  function handleDragStart(event) {
-    if (!canDragBuild) {
-      event.preventDefault();
-      return;
-    }
-    const payload = { cardUid: card.uid, source, name: card.name };
-    event.dataTransfer.effectAllowed = 'copyMove';
-    event.dataTransfer.setData('application/city-sand-card', JSON.stringify(payload));
-    event.dataTransfer.setData('text/plain', card.name);
-    onDragBuildStart?.(payload);
-  }
-
-  function handleDragEnd() {
-    onDragBuildEnd?.();
+  function handleSelect() {
+    if (!canDirectBuild) return;
+    onSelectBuildCard(selected ? null : { cardUid: card.uid, source, name: card.name });
   }
 
   return (
     <div
-      className={`market-card ${affordable ? 'market-card--affordable' : ''} ${buyable ? 'market-card--buyable' : ''} ${canDragBuild ? 'market-card--draggable' : ''}`}
+      className={`market-card ${affordable ? 'market-card--affordable' : ''} ${buyable ? 'market-card--buyable' : ''} ${canDirectBuild ? 'market-card--selectable' : ''} ${selected ? 'market-card--selected-build' : ''}`}
       style={{ borderTopColor: isTile ? tileColor : '#888' }}
-      draggable={canDragBuild}
-      onDragStart={handleDragStart}
-      onDragEnd={handleDragEnd}
-      title={canDragBuild ? `Drag ${card.name} onto any empty city square to build it` : undefined}
+      onClick={handleSelect}
+      title={canDirectBuild ? `Select ${card.name}, then click a city square to build it` : undefined}
     >
       <div className="mc-name">{card.name}</div>
 
@@ -163,27 +149,22 @@ function MarketCard({ card, source, affordable, buyable, canRefresh, onBuy, onRe
 
       <div className="mc-effect">{card.effectText}</div>
 
-      <div className="mc-actions">
-        <button
-          className="btn-buy"
-          disabled={!buyable}
-          onClick={onBuy}
-          title={
-            buyable
-              ? isTile ? `Queue ${card.name} for placement` : `Buy ${card.name}`
-              : affordable
-                ? 'No build actions remaining'
-                : 'Cannot afford'
-          }
-        >
-          {isTile ? 'Queue' : 'Buy'}
-        </button>
-        {canDragBuild && <span className="drag-build-label">Drag to build</span>}
+      <div className="mc-actions" onClick={(event) => event.stopPropagation()}>
+        {canDirectBuild ? (
+          <button className="btn-buy" onClick={handleSelect}>
+            {selected ? 'Cancel' : 'Build'}
+          </button>
+        ) : (
+          <button className="btn-buy" disabled={!buyable} onClick={onBuy}>
+            {isTile ? 'Queue' : 'Buy'}
+          </button>
+        )}
+        {canDirectBuild && <span className="drag-build-label">choose square</span>}
         {canRefresh && (
           <button
             className="btn-refresh"
             onClick={onRefresh}
-            title="Free Refresh: send to bottom of deck, reveal replacement (§4 step 2)"
+            title="Free Refresh: send to bottom of deck, reveal replacement"
           >
             ↺
           </button>
