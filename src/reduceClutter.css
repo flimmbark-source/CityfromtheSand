@@ -1,0 +1,184 @@
+/* Second-pass layout overrides: reduce overlap and visual noise. */
+.player-huds {
+  display: none;
+}
+
+.game-header {
+  height: 86px;
+  grid-template-columns: 190px minmax(360px, 1fr) 300px;
+  padding: 0.45rem 0.9rem 0.55rem;
+}
+
+.game-title {
+  font-size: clamp(1.45rem, 2.6vw, 2.2rem);
+  letter-spacing: 0.16em;
+}
+
+.turn-banner {
+  margin-top: 0.35rem;
+  padding: 0.28rem 1rem;
+  font-size: 0.95rem;
+}
+
+.header-room-chip {
+  opacity: 0.82;
+}
+
+.game-layout {
+  grid-template-columns: 170px minmax(620px, 1fr) 405px;
+  gap: 0.65rem;
+  padding: 0.65rem;
+  padding-top: 0.65rem;
+}
+
+.left-utility-rail,
+.right-panels {
+  padding-top: 0;
+}
+
+.left-utility-rail {
+  gap: 0.55rem;
+}
+
+.tile-stack-panel,
+.token-panel,
+.engine-actions,
+.market-row,
+.landmark-row,
+.command-deck,
+.action-log {
+  padding: 0.55rem;
+}
+
+.tile-stack-card {
+  height: 96px;
+}
+
+.tile-stack-emblem {
+  font-size: 1.65rem;
+}
+
+.tile-stack-card strong {
+  font-size: 1.35rem;
+}
+
+.rail-button {
+  padding: 0.35rem;
+  margin-top: 0.4rem;
+}
+
+.token-grid {
+  gap: 0.25rem;
+}
+
+.token-grid span {
+  padding: 0.28rem 0.35rem;
+  font-size: 0.78rem;
+}
+
+.rail-note {
+  display: none;
+}
+
+.city-board {
+  padding: 0.6rem;
+}
+
+.city-board-title {
+  display: none;
+}
+
+.grid-cell {
+  width: clamp(48px, 5.2vw, 70px);
+  height: clamp(48px, 5.2vw, 70px);
+}
+
+.city-board-legend {
+  display: none;
+}
+
+.turn-guide {
+  min-height: 56px;
+}
+
+.tg-step {
+  padding: 0.26rem 0.35rem;
+  min-width: 70px;
+}
+
+.tg-num {
+  font-size: 0.85rem;
+}
+
+.tg-detail,
+.tg-note {
+  display: none;
+}
+
+.player-hand {
+  min-height: 118px;
+  padding: 0.55rem 0.65rem;
+}
+
+.hand-card {
+  width: 70px;
+  height: 92px;
+}
+
+.market-action-counters,
+.market-deck-count,
+.basic-pool,
+.basic-note {
+  display: none;
+}
+
+.market-cards {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.32rem;
+}
+
+.market-card {
+  min-height: 138px;
+  padding: 0.32rem;
+}
+
+.landmark-card {
+  min-height: 138px;
+  padding: 0.32rem;
+}
+
+.mc-effect,
+.lm-effect {
+  font-size: 0.61rem;
+  line-height: 1.14;
+  max-height: 3.4em;
+  overflow: hidden;
+}
+
+.mc-meta,
+.lm-meta {
+  padding: 0.12rem 0;
+  margin-bottom: 0.16rem;
+}
+
+.command-buttons {
+  gap: 0.35rem;
+}
+
+.action-button {
+  min-height: 56px;
+}
+
+.action-log {
+  min-height: 95px;
+}
+
+@media (max-height: 780px) {
+  .game-header { height: 74px; }
+  .game-layout { grid-template-columns: 150px minmax(520px, 1fr) 380px; }
+  .tile-stack-card { height: 74px; }
+  .token-panel { display: none; }
+  .player-hand { min-height: 100px; }
+  .hand-card { width: 62px; height: 80px; }
+  .action-button { min-height: 48px; }
+}
