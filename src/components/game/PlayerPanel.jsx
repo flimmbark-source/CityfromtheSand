@@ -23,6 +23,13 @@ const STAT_LABELS = {
   refresh: 'Refresh',
 };
 
+const STAT_SHORT_LABELS = {
+  hand:    'Hand',
+  build:   'Build',
+  convert: 'Conv',
+  refresh: 'Ref',
+};
+
 // §2: what each stat does — shown as tooltip
 const STAT_TIPS = {
   hand:    'Draw this many cards at start of turn',
@@ -31,8 +38,60 @@ const STAT_TIPS = {
   refresh: 'Refresh up to this many Market cards for free (step 2, before buying)',
 };
 
-export default function PlayerPanel({ player, isActive, onApplyUpgrade }) {
+export default function PlayerPanel({ player, isActive, onApplyUpgrade, variant = 'full' }) {
   const { name, stats, tokens, upgradeTokens, vp, deck, discard, engineZone, hand } = player;
+
+  if (variant === 'hud') {
+    return (
+      <aside className={`player-panel player-panel--hud ${isActive ? 'player-panel--active' : ''}`}>
+        <div className="hud-main-row">
+          <div>
+            <div className="panel-name">{name}</div>
+            <div className="hud-status">{isActive ? 'Active turn' : 'Opponent'}</div>
+          </div>
+          <div className="panel-vp">{vp} <span className="vp-label">VP</span></div>
+        </div>
+
+        <div className="hud-resource-row" title="Persistent resource tokens">
+          {Object.entries(tokens).map(([res, count]) => (
+            <span key={res} className={`hud-resource ${count > 0 ? 'hud-resource--ready' : ''}`}>
+              <span style={{ color: RES_COLOR[res] }}>{RES_EMOJI[res]}</span>
+              {count}
+            </span>
+          ))}
+          {upgradeTokens > 0 && <span className="hud-resource hud-upgrade">⬆ {upgradeTokens}</span>}
+        </div>
+
+        <div className="hud-stat-strip">
+          {Object.entries(stats).map(([stat, val]) => {
+            const cap = STAT_CAPS[stat];
+            const atCap = val >= cap;
+            const canUpgrade = isActive && canApplyUpgrade(player, stat);
+            return (
+              <button
+                key={stat}
+                className={`hud-stat ${canUpgrade ? 'hud-stat--upgradeable' : ''}`}
+                disabled={!canUpgrade}
+                onClick={() => canUpgrade && onApplyUpgrade(stat)}
+                title={canUpgrade ? `Spend 1 upgrade token: ${stat} ${val} → ${val + 1}` : STAT_TIPS[stat]}
+              >
+                <span>{STAT_SHORT_LABELS[stat]}</span>
+                <strong className={atCap ? 'stat-val--cap' : ''}>{val}</strong>
+                <small>/{cap}</small>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="hud-deck-row">
+          <span>Deck <strong>{deck.length}</strong></span>
+          <span>Hand <strong>{hand.length}</strong></span>
+          <span>Discard <strong>{discard.length}</strong></span>
+          {engineZone.length > 0 && <span>⚙ <strong>{engineZone.length}</strong></span>}
+        </div>
+      </aside>
+    );
+  }
 
   return (
     <aside className={`player-panel ${isActive ? 'player-panel--active' : ''}`}>
