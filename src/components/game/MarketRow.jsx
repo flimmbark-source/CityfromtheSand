@@ -27,19 +27,19 @@ export default function MarketRow({
   onBuyFromMarket,
   onBuyBasic,
   onRefreshMarket,
+  onDragBuildStart,
+  onDragBuildEnd,
 }) {
   const canRefresh = refreshesRemaining > 0;
 
   return (
     <div className="market-row">
-      {/* §4 step 3 — Build counter */}
       <div className="market-action-counters">
         <div className={`action-counter ${buildsRemaining > 0 ? 'counter--available' : 'counter--spent'}`}>
           <span className="counter-icon">🔨</span>
           <span className="counter-label">Buy/Build</span>
           <span className="counter-val">{buildsRemaining}/{buildTotal}</span>
         </div>
-        {/* §4 step 2 — Free Refresh counter (shown even when 0) */}
         {refreshTotal > 0 && (
           <div className={`action-counter ${canRefresh ? 'counter--available' : 'counter--spent'}`}>
             <span className="counter-icon">↺</span>
@@ -50,18 +50,21 @@ export default function MarketRow({
         )}
       </div>
 
-      <div className="market-section-title">Main Market (5 cards)</div>
+      <div className="market-section-title">Main Market <span className="drag-hint">drag buildable cards onto the city</span></div>
 
       <div className="market-cards">
         {market.row.map((card) => (
           <MarketCard
             key={card.uid}
             card={card}
+            source="market"
             affordable={canAfford(card)}
             buyable={canBuy(card)}
             canRefresh={canRefresh}
             onBuy={() => onBuyFromMarket(card.uid, 'market')}
             onRefresh={() => onRefreshMarket(card.uid)}
+            onDragBuildStart={onDragBuildStart}
+            onDragBuildEnd={onDragBuildEnd}
           />
         ))}
         {market.row.length === 0 && (
@@ -71,7 +74,6 @@ export default function MarketRow({
 
       <div className="market-deck-count">Deck: {market.deck.length} remaining</div>
 
-      {/* §8 Basic Pool — fallback cards, do not build tiles */}
       <div className="market-section-title" style={{ marginTop: '0.5rem' }}>
         Basic Cards <span className="basic-note">(fallback — no tile)</span>
       </div>
@@ -102,15 +104,36 @@ export default function MarketRow({
   );
 }
 
-function MarketCard({ card, affordable, buyable, canRefresh, onBuy, onRefresh }) {
+function MarketCard({ card, source, affordable, buyable, canRefresh, onBuy, onRefresh, onDragBuildStart, onDragBuildEnd }) {
   const isTile = card.cardType === CARD_TYPES.TILE || card.cardType === CARD_TYPES.LANDMARK;
   const isEngine = card.cardType === CARD_TYPES.ENGINE;
   const tileColor = TYPE_COLOR[card.tileType] || '#888';
+  const canDragBuild = isTile && buyable;
+
+  function handleDragStart(event) {
+    if (!canDragBuild) {
+      event.preventDefault();
+      return;
+    }
+    const payload = { cardUid: card.uid, source, name: card.name };
+    event.dataTransfer.effectAllowed = 'copyMove';
+    event.dataTransfer.setData('application/city-sand-card', JSON.stringify(payload));
+    event.dataTransfer.setData('text/plain', card.name);
+    onDragBuildStart?.(payload);
+  }
+
+  function handleDragEnd() {
+    onDragBuildEnd?.();
+  }
 
   return (
     <div
-      className={`market-card ${affordable ? 'market-card--affordable' : ''} ${buyable ? 'market-card--buyable' : ''}`}
+      className={`market-card ${affordable ? 'market-card--affordable' : ''} ${buyable ? 'market-card--buyable' : ''} ${canDragBuild ? 'market-card--draggable' : ''}`}
       style={{ borderTopColor: isTile ? tileColor : '#888' }}
+      draggable={canDragBuild}
+      onDragStart={handleDragStart}
+      onDragEnd={handleDragEnd}
+      title={canDragBuild ? `Drag ${card.name} onto any empty city square to build it` : undefined}
     >
       <div className="mc-name">{card.name}</div>
 
@@ -122,7 +145,6 @@ function MarketCard({ card, affordable, buyable, canRefresh, onBuy, onRefresh })
 
       {isTile && (
         <div className="mc-meta">
-          {/* §9 Build icon = tile type */}
           <span
             className="mc-tiletype"
             style={{ background: tileColor + '33', borderColor: tileColor, color: tileColor }}
@@ -148,14 +170,15 @@ function MarketCard({ card, affordable, buyable, canRefresh, onBuy, onRefresh })
           onClick={onBuy}
           title={
             buyable
-              ? `Buy ${card.name}`
+              ? isTile ? `Queue ${card.name} for placement` : `Buy ${card.name}`
               : affordable
                 ? 'No build actions remaining'
                 : 'Cannot afford'
           }
         >
-          {isTile ? 'Build' : 'Buy'}
+          {isTile ? 'Queue' : 'Buy'}
         </button>
+        {canDragBuild && <span className="drag-build-label">Drag to build</span>}
         {canRefresh && (
           <button
             className="btn-refresh"
