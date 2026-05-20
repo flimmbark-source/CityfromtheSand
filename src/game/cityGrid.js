@@ -26,29 +26,30 @@ export function getNeighborCells(cells, row, col) {
     .map((k) => cells[k]);
 }
 
-// A tile can be placed at (row,col) if:
-//   - the cell is empty, AND
-//   - the grid is empty (first tile) OR at least one orthogonal neighbor is occupied.
+// Digital prototype rule: a purchased tile can be built on any empty visible map cell.
+// This intentionally removes the tabletop-style adjacency restriction so the app can
+// support direct drag-from-market placement anywhere on the board.
 export function canPlaceTileAt(cells, row, col) {
-  if (cells[cellKey(row, col)]) return false; // occupied
-  if (Object.keys(cells).length === 0) return true; // first tile
-  return getNeighborKeys(row, col).some((k) => Boolean(cells[k]));
+  return !cells[cellKey(row, col)];
 }
 
-// Returns array of all valid empty cells adjacent to existing tiles.
+// Returns all empty cells inside the current visible board window.
+// The window expands with the city but starts as a useful 7×7 buildable map.
 export function validPlacementCells(cells) {
-  if (Object.keys(cells).length === 0) {
-    return [{ row: 0, col: 0 }];
-  }
-  const candidates = new Set();
-  for (const key of Object.keys(cells)) {
-    const { row, col } = parseKey(key);
-    for (const [dr, dc] of ORTHOGONAL_DELTAS) {
-      const nk = cellKey(row + dr, col + dc);
-      if (!cells[nk]) candidates.add(nk);
+  const { minRow, maxRow, minCol, maxCol } = gridBoundingBox(cells);
+  const pad = 3;
+  const displayMinRow = Math.min(minRow - pad, -3);
+  const displayMaxRow = Math.max(maxRow + pad, 3);
+  const displayMinCol = Math.min(minCol - pad, -3);
+  const displayMaxCol = Math.max(maxCol + pad, 3);
+
+  const result = [];
+  for (let row = displayMinRow; row <= displayMaxRow; row++) {
+    for (let col = displayMinCol; col <= displayMaxCol; col++) {
+      if (!cells[cellKey(row, col)]) result.push({ row, col });
     }
   }
-  return [...candidates].map(parseKey);
+  return result;
 }
 
 // A tile is "on edge" if at least one orthogonal neighbor is empty (no tile).
